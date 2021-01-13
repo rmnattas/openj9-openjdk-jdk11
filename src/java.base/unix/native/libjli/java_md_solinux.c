@@ -25,7 +25,7 @@
 
 /*
  * ===========================================================================
- * (c) Copyright IBM Corp. 2020, 2020 All Rights Reserved
+ * (c) Copyright IBM Corp. 2020, 2021 All Rights Reserved
  * ===========================================================================
  */
 
@@ -377,6 +377,7 @@ CreateExecutionEnvironment(int *pargc, char ***pargv,
          *     o          $JVMPATH (directory portion only)
          *     o          $JRE/lib
          *     o          $JRE/../lib
+         *     o          ZLIBNX_PATH (for AIX P9 or newer systems with NX)
          *
          * followed by the user's previous effective LD_LIBRARY_PATH, if
          * any.
@@ -392,6 +393,8 @@ CreateExecutionEnvironment(int *pargc, char ***pargv,
 #ifdef AIX
                     /* On AIX we additionally need 'jli' in the path because ld doesn't support $ORIGIN. */
                     JLI_StrLen(jrepath) + JLI_StrLen("/lib//jli:") +
+                    /* On AIX P9 or newer with NX accelerator enabled, add the accelerated zlibNX to LIBPATH */
+                    ((__power_9_andup() && __power_nx_gzip()) ? JLI_StrLen(ZLIBNX_PATH ":") : 0) +
 #endif
                     JLI_StrLen(new_jvmpath) + 52;
             new_runpath = JLI_MemAlloc(new_runpath_size);
@@ -407,7 +410,7 @@ CreateExecutionEnvironment(int *pargc, char ***pargv,
                 if (lastslash)
                     *lastslash = '\0';
 
-                sprintf(new_runpath, LD_LIBRARY_PATH "="
+                int print_offset = sprintf(new_runpath, LD_LIBRARY_PATH "="
                         "%s:"
                         "%s/lib:"
 #ifdef AIX
@@ -421,6 +424,12 @@ CreateExecutionEnvironment(int *pargc, char ***pargv,
 #endif
                         jrepath
                         );
+
+#ifdef AIX
+                if (__power_9_andup() && __power_nx_gzip()){
+                    sprintf(new_runpath + print_offset, ":" ZLIBNX_PATH);
+                }
+#endif
 
                 JLI_MemFree(new_jvmpath);
 

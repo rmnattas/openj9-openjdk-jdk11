@@ -23,6 +23,12 @@
  * questions.
  */
 
+/*
+ * ===========================================================================
+ * (c) Copyright IBM Corp. 2021, 2021 All Rights Reserved
+ * ===========================================================================
+ */
+
 #ifndef JAVA_MD_SOLINUX_H
 #define JAVA_MD_SOLINUX_H
 
@@ -59,5 +65,24 @@ static const char *user_dir     = "/java";
 #else
 #include <pthread.h>
 #endif
+
+#ifdef AIX
+#define ZLIBNX_PATH "/usr/opt/zlibNX/lib"
+
+#ifndef POWER_9
+#define POWER_9     0x20000     /* 9 class CPU */
+#define POWER_9_ANDUP   (POWER_9)
+#define __power_9_andup() (_system_configuration.implementation & POWER_9_ANDUP)
+#endif
+
+#ifndef SC_NX_CAP
+#define SC_NX_CAP   60
+#endif
+
+#ifndef NX_GZIP_PRESENT
+#define NX_GZIP_PRESENT 0x00000001
+#define __power_nx_gzip()   ((long)getsystemcfg(SC_NX_CAP) & NX_GZIP_PRESENT)
+#endif 
+#endif /* AIX */
 
 #endif /* JAVA_MD_SOLINUX_H */
