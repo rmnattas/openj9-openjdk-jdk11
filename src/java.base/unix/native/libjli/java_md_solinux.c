@@ -394,7 +394,7 @@ CreateExecutionEnvironment(int *pargc, char ***pargv,
                     /* On AIX we additionally need 'jli' in the path because ld doesn't support $ORIGIN. */
                     JLI_StrLen(jrepath) + JLI_StrLen("/lib//jli:") +
                     /* On AIX P9 or newer with NX accelerator enabled, add the accelerated zlibNX to LIBPATH */
-                    ((__power_9_andup() && __power_nx_gzip()) ? JLI_StrLen(ZLIBNX_PATH ":") : 0) +
+                    ((__power_9_andup() && __power_nx_gzip()) ? JLI_StrLen(":" ZLIBNX_PATH) : 0) +
 #endif
                     JLI_StrLen(new_jvmpath) + 52;
             new_runpath = JLI_MemAlloc(new_runpath_size);
@@ -410,26 +410,27 @@ CreateExecutionEnvironment(int *pargc, char ***pargv,
                 if (lastslash)
                     *lastslash = '\0';
 
-                int print_offset = sprintf(new_runpath, LD_LIBRARY_PATH "="
+                sprintf(new_runpath, LD_LIBRARY_PATH "="
                         "%s:"
                         "%s/lib:"
 #ifdef AIX
                         "%s/lib/jli:" /* Needed on AIX because ld doesn't support $ORIGIN. */
 #endif
-                        "%s/../lib",
+                        "%s/../lib"
+#ifdef AIX
+                        "%s" /* For zlibNX on eligible AIX systems */
+#endif
+                        ,
                         new_jvmpath,
                         jrepath,
 #ifdef AIX
                         jrepath,
 #endif
                         jrepath
-                        );
-
 #ifdef AIX
-                if (__power_9_andup() && __power_nx_gzip()){
-                    sprintf(new_runpath + print_offset, ":" ZLIBNX_PATH);
-                }
+                        ,((__power_9_andup() && __power_nx_gzip()) ? (":" ZLIBNX_PATH) : "")
 #endif
+                        );
 
                 JLI_MemFree(new_jvmpath);
 
