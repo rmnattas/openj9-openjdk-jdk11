@@ -547,7 +547,7 @@ public class ObjectInputStream
         ClassLoader oldCachedLudcl = null;
 	boolean setCached = false;
 
-	if (((null == curContext) || refreshLudcl) && (isClassCachingEnabled)) {
+	if (((null == curContext) /* || refreshLudcl */) && (isClassCachingEnabled)) {
             oldCachedLudcl = cachedLudcl;
 
             // If caller is not provided, follow the standard path to get the cachedLudcl.
@@ -673,7 +673,7 @@ public class ObjectInputStream
         ClassLoader oldCachedLudcl = null;
         boolean setCached = false; 
 
-        if (((null == curContext) || refreshLudcl) && (isClassCachingEnabled)) {
+        if (((null == curContext) /* || refreshLudcl */) && (isClassCachingEnabled)) {
             oldCachedLudcl = cachedLudcl;
             cachedLudcl = latestUserDefinedLoader();
             setCached = true;
@@ -865,10 +865,10 @@ public class ObjectInputStream
             if (null == classByNameCache) {
                 return Class.forName(name, false, latestUserDefinedLoader());
             } else {
-                if (refreshLudcl) {
-                    cachedLudcl = latestUserDefinedLoader();
-                    refreshLudcl = false;
-                }
+                // if (refreshLudcl) {
+                //     cachedLudcl = latestUserDefinedLoader();
+                //     refreshLudcl = false;
+                // }
                 return classByNameCache.get(name, cachedLudcl);
             }
         } catch (ClassNotFoundException ex) {
